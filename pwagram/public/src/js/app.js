@@ -16,3 +16,26 @@ window.addEventListener('beforeinstallprompt', (e) => {
     deferredPrompt = e
     return false
 })
+
+// setTimeout(() => {
+//     // This is a callback
+//     console.log('This is executed once the timer is done')
+// }, 3000) // Non-blocking
+//
+// console.log('This is executed right after setTimeout()')
+
+let promise = new Promise((resolve, reject) => {
+    setTimeout(() => {
+        resolve('This is executed once the timer is done')
+    }, 3000)
+})
+
+promise.then((text) => {
+    console.log(text)
+    return text
+}).then((newText) => {
+    console.log(newText)
+})
+    .catch(() => {
+
+})
