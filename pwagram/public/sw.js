@@ -12,5 +12,6 @@ self.addEventListener('activate', (e) => {
 // Fetch
 self.addEventListener('fetch', (e) => {
     console.log('[Service Worker]: Fetching …', e)
-    e.respondWith(fetch(e.request)) // Default behaviour: return the request with the response
+    // TODO: remove this as it is not necessary
+    e.respondWith(fetch(e.request)) // Returns the fetch request with the response
 })
