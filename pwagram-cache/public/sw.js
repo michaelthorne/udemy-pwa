@@ -1,4 +1,4 @@
-const CACHE_STATIC_NAME = 'static-v0.0.4'
+const CACHE_STATIC_NAME = 'static-v0.0.5'
 const CACHE_DYNAMIC_NAME = 'dynamic-v0.0.1'
 
 self.addEventListener('install', function(event) {
@@ -43,22 +43,34 @@ self.addEventListener('activate', function(event) {
   return self.clients.claim()
 })
 
-// Network with cache fallback strategy.
-self.addEventListener('fetch', function(event) {
+// Cache with network and dynamic fallback strategy.
+self.addEventListener('fetch', (event) => {
   event.respondWith(
-      // Attempt the network request
-      fetch(event.request).then((res) => {
-        return caches.open(CACHE_DYNAMIC_NAME).then((cache) => {
-          cache.put(event.request.url, res.clone())
+      caches.open(CACHE_DYNAMIC_NAME).then((cache) => {
+        return fetch(event.request).then((res) => {
+          cache.put(event.request, res.clone())
           return res
         })
-      }).catch(() => {
-        return caches.match(event.request)
       })
   )
 })
 
-// Cache with network fallback.
+// Network with cache fallback strategy.
+// self.addEventListener('fetch', function(event) {
+//   event.respondWith(
+//       // Attempt the network request
+//       fetch(event.request).then((res) => {
+//         return caches.open(CACHE_DYNAMIC_NAME).then((cache) => {
+//           cache.put(event.request.url, res.clone())
+//           return res
+//         })
+//       }).catch(() => {
+//         return caches.match(event.request)
+//       })
+//   )
+// })
+
+// Cache with network fallback strategy.
 // self.addEventListener('fetch', function(event) {
 //   event.respondWith(
 //       // Intercept the request and see if it is in the cache
