@@ -1,5 +1,5 @@
-const CACHE_STATIC_NAME = 'static-v5'
-const CACHE_DYNAMIC_NAME = 'dynamic-v2'
+const CACHE_STATIC_NAME = 'static-v0.0.1'
+const CACHE_DYNAMIC_NAME = 'dynamic-v0.0.1'
 
 self.addEventListener('install', function(event) {
   console.log('[Service Worker] Installing Service Worker …', event)
@@ -10,8 +10,7 @@ self.addEventListener('install', function(event) {
     cache.addAll([
         '/',
         '/index.html',
-        '/help/',
-        '/help/index.html',
+        '/offline.html',
         '/src/js/app.js',
         '/src/js/feed.js',
         '/src/js/material.min.js',
@@ -52,14 +51,19 @@ self.addEventListener('fetch', function(event) {
         if (response) {
           return response // Return the response from the cache
         }
+        // Return the request as per normal
+        // return fetch(event.request)
 
         // Dynamically cache requests that are not statically cached
         return fetch(event.request).then((res) => {
           return caches.open(CACHE_DYNAMIC_NAME).then((cache) => {
             cache.put(event.request.url, res.clone()) // Store a clone of the response so that it is not consumed
             return res // Returns the original response
-          }).catch((err) => {
-
+          })
+        }).catch((err) => {
+          // Return an offline page if there is no item found in the cache
+          return caches.open(CACHE_STATIC_NAME).then((cache) => {
+            return cache.match('/offline.html');
           })
         })
       })
