@@ -1,4 +1,4 @@
-const CACHE_STATIC_NAME = 'static-v0.0.5'
+const CACHE_STATIC_NAME = 'static-v0.0.6'
 const CACHE_DYNAMIC_NAME = 'dynamic-v0.0.1'
 
 const STATIC_ASSETS = [
@@ -45,6 +45,16 @@ self.addEventListener('activate', function(event) {
   return self.clients.claim()
 })
 
+function isInArray(string, array) {
+  let cachePath
+  if (string.indexOf(self.origin) === 0) { // request targets domain where we serve the page from (i.e. NOT a CDN)
+    cachePath = string.substring(self.origin.length) // take the part of the URL AFTER the domain (e.g. after localhost:8080)
+  } else {
+    cachePath = string // store the full request (for CDNs)
+  }
+  return array.indexOf(cachePath) > -1
+}
+
 // Cache then network, with offline support strategy.
 self.addEventListener('fetch', (event) => {
   const url = 'https://httpbin.org/get'
@@ -59,7 +69,7 @@ self.addEventListener('fetch', (event) => {
           })
         })
     )
-  } else if (new RegExp('\\b' + STATIC_ASSETS.join('\\b|\\b') + '\\b').test(event.request.url)) { // Check if request URL is for any of the static assets
+  } else if (isInArray(event.request.url, STATIC_ASSETS)) { // Check if request URL is for any of the static assets
     // Cache only strategy
     event.respondWith(
         caches.match(event.request)
@@ -81,8 +91,8 @@ self.addEventListener('fetch', (event) => {
           }).catch((err) => {
             // Return an offline page if there is no item found in the cache
             return caches.open(CACHE_STATIC_NAME).then((cache) => {
-              if (event.request.url.indexOf('/help') > -1) {
-                // Only show offline when attempting to access the help page
+              // Only show the offline page when attempting to request HTML files
+              if (event.request.headers.get('accept').includes('text/html')) {
                 return cache.match('/offline.html');
               }
             })
