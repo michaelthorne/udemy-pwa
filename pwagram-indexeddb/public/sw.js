@@ -1,5 +1,5 @@
-const CACHE_STATIC_NAME = 'static-v15';
-const CACHE_DYNAMIC_NAME = 'dynamic-v2';
+const CACHE_STATIC_NAME = 'static-0.0.5';
+const CACHE_DYNAMIC_NAME = 'dynamic-0.0.1';
 const STATIC_FILES = [
   '/',
   '/index.html',
@@ -69,7 +69,7 @@ function isInArray(string, array) {
 }
 
 self.addEventListener('fetch', function (event) {
-  const url = 'https://httpbin.org/get';
+  const url = 'https://pwagram-9fda4-default-rtdb.firebaseio.com/posts.json';
   if (event.request.url.indexOf(url) > -1) {
     event.respondWith(
       caches.open(CACHE_DYNAMIC_NAME)
