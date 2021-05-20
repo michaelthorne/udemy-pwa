@@ -43,17 +43,56 @@ self.addEventListener('activate', function(event) {
   return self.clients.claim()
 })
 
-// Cache with network and dynamic fallback strategy.
+// Cache then network, with offline support strategy.
 self.addEventListener('fetch', (event) => {
-  event.respondWith(
-      caches.open(CACHE_DYNAMIC_NAME).then((cache) => {
-        return fetch(event.request).then((res) => {
-          cache.put(event.request, res.clone())
-          return res
+  const url = 'https://httpbin.org/get'
+
+  // Cache, then network for the URL that triggers our cache usage
+  if (event.request.url.indexOf(url) > -1) {
+    event.respondWith(
+        caches.open(CACHE_DYNAMIC_NAME).then((cache) => {
+          return fetch(event.request).then((res) => {
+            cache.put(event.request, res.clone())
+            return res
+          })
         })
-      })
-  )
+    )
+  } else {
+    // Cache, with network fallback strategy.
+    event.respondWith(
+      caches.match(event.request).then((response) => {
+          if (response) {
+            return response // Return the response from the cache
+          }
+
+          // Dynamically cache requests that are not statically cached
+          return fetch(event.request).then((res) => {
+            return caches.open(CACHE_DYNAMIC_NAME).then((cache) => {
+              cache.put(event.request.url, res.clone()) // Store a clone of the response so that it is not consumed
+              return res // Returns the original response
+            })
+          }).catch((err) => {
+            // Return an offline page if there is no item found in the cache
+            return caches.open(CACHE_STATIC_NAME).then((cache) => {
+              return cache.match('/offline.html');
+            })
+          })
+        })
+    )
+  }
 })
+
+// Cache with network and dynamic fallback strategy.
+// self.addEventListener('fetch', (event) => {
+//   event.respondWith(
+//       caches.open(CACHE_DYNAMIC_NAME).then((cache) => {
+//         return fetch(event.request).then((res) => {
+//           cache.put(event.request, res.clone())
+//           return res
+//         })
+//       })
+//   )
+// })
 
 // Network with cache fallback strategy.
 // self.addEventListener('fetch', function(event) {
