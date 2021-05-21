@@ -1,7 +1,7 @@
 importScripts('/src/js/idb.js')
 importScripts('/src/js/db.js')
 
-const CACHE_STATIC_NAME = 'static-0.0.3';
+const CACHE_STATIC_NAME = 'static-0.0.4';
 const CACHE_DYNAMIC_NAME = 'dynamic-0.0.1';
 const STATIC_FILES = [
   '/',
@@ -75,17 +75,20 @@ self.addEventListener('fetch', function (event) {
   const url = 'https://pwagram-9fda4-default-rtdb.firebaseio.com/posts.json';
   if (event.request.url.indexOf(url) > -1) {
     event.respondWith(
-          fetch(event.request)
-            .then(function (res) {
-              let clonedRes = res.clone()
-              clonedRes.json().then((data) => {
-                for (const key in data) { // Loop over posts
-                  writeData('posts', data[key])
-                }
-              })
-              return res
-            }
-    ))
+        fetch(event.request)
+        .then(function (res) {
+          let clonedRes = res.clone()
+          clearAllData('posts').then(() => {
+            return clonedRes.json()
+          })
+          .then((data) => {
+              for (const key in data) { // Loop over posts
+                writeData('posts', data[key])
+              }
+            })
+            return res
+          })
+    )
   } else if (isInArray(event.request.url, STATIC_FILES)) {
     event.respondWith(
       caches.match(event.request)

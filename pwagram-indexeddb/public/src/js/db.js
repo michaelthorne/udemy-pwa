@@ -22,3 +22,23 @@ function readAllData(store) {
     return st.getAll()
   })
 }
+
+function clearAllData(store) {
+  return dbPromise.then((db) => {
+    let tx = db.transaction(store, 'readwrite')
+    let st = tx.objectStore(store)
+    st.clear()
+    return tx.complete
+  })
+}
+
+function deleteItem(store, id) {
+  return dbPromise.then((db) => {
+    let tx = db.transaction(store, 'readwrite')
+    let st = tx.objectStore(store)
+    st.delete(id)
+    return tx.complete
+  }).then(() => {
+    console.log('[App]: Item deleted', id)
+  })
+}
