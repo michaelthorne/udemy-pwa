@@ -5,7 +5,8 @@ const closeCreatePostModalButton = document.querySelector(
 const sharedMomentsArea = document.querySelector('#shared-moments');
 
 function openCreatePostModal() {
-  createPostArea.style.display = 'block'
+  createPostArea.style.transform = 'translateY(0)'
+
   if (deferredPrompt) {
     deferredPrompt.prompt()
 
@@ -32,7 +33,7 @@ function openCreatePostModal() {
 }
 
 function closeCreatePostModal() {
-  createPostArea.style.display = 'none'
+  createPostArea.style.transform = 'translateY(100vh)'
 }
 
 shareImageButton.addEventListener('click', openCreatePostModal)
@@ -58,7 +59,6 @@ function clearCards() {
 }
 
 function createCard(data) {
-  console.log('[App]: Create Card', data.title)
   const cardWrapper = document.createElement('div');
   cardWrapper.className = 'shared-moment-card mdl-card mdl-shadow--2dp'
   const cardTitle = document.createElement('div');
