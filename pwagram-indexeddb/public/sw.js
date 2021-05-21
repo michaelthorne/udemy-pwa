@@ -1,13 +1,16 @@
-const CACHE_STATIC_NAME = 'static-0.0.5';
+importScripts('/src/js/idb.js')
+importScripts('/src/js/db.js')
+
+const CACHE_STATIC_NAME = 'static-0.0.3';
 const CACHE_DYNAMIC_NAME = 'dynamic-0.0.1';
 const STATIC_FILES = [
   '/',
   '/index.html',
   '/offline.html',
+  '/src/js/idb.js',
+  '/src/js/db.js',
   '/src/js/app.js',
   '/src/js/feed.js',
-  '/src/js/promise.js',
-  '/src/js/fetch.js',
   '/src/js/material.min.js',
   '/src/css/app.css',
   '/src/css/feed.css',
@@ -31,18 +34,18 @@ const STATIC_FILES = [
 // }
 
 self.addEventListener('install', function (event) {
-  console.log('[Service Worker] Installing Service Worker ...', event)
+  console.log('[Service Worker] Installing Service Worker …', event)
   event.waitUntil(
     caches.open(CACHE_STATIC_NAME)
       .then(function (cache) {
-        console.log('[Service Worker] Precaching App Shell')
+        console.log('[Service Worker] Precaching App Shell.')
         cache.addAll(STATIC_FILES)
       })
   )
 })
 
 self.addEventListener('activate', function (event) {
-  console.log('[Service Worker] Activating Service Worker ....', event)
+  console.log('[Service Worker] Activating Service Worker …', event)
   event.waitUntil(
     caches.keys()
       .then(function (keyList) {
@@ -60,7 +63,7 @@ self.addEventListener('activate', function (event) {
 function isInArray(string, array) {
   let cachePath;
   if (string.indexOf(self.origin) === 0) { // request targets domain where we serve the page from (i.e. NOT a CDN)
-    console.log('matched ', string)
+    // console.log('matched ', string)
     cachePath = string.substring(self.origin.length) // take the part of the URL AFTER the domain (e.g. after localhost:8080)
   } else {
     cachePath = string // store the full request (for CDNs)
@@ -72,16 +75,17 @@ self.addEventListener('fetch', function (event) {
   const url = 'https://pwagram-9fda4-default-rtdb.firebaseio.com/posts.json';
   if (event.request.url.indexOf(url) > -1) {
     event.respondWith(
-      caches.open(CACHE_DYNAMIC_NAME)
-        .then(function (cache) {
-          return fetch(event.request)
+          fetch(event.request)
             .then(function (res) {
-              // trimCache(CACHE_DYNAMIC_NAME, 3)
-              cache.put(event.request, res.clone())
+              let clonedRes = res.clone()
+              clonedRes.json().then((data) => {
+                for (const key in data) { // Loop over posts
+                  writeData('posts', data[key])
+                }
+              })
               return res
-            })
-        })
-    )
+            }
+    ))
   } else if (isInArray(event.request.url, STATIC_FILES)) {
     event.respondWith(
       caches.match(event.request)
